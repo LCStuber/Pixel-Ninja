@@ -8,14 +8,16 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance;
 
     [Header("UI do Jogo")]
-    public TMP_Text gameOverText;    // Texto de Game Over (TMP)
-    public Button restartButton;     // Botão para reiniciar
-    public TMP_Text scoreText;       // Exibição da pontuação (TMP)
+    public TMP_Text gameOverText;    
+    public Button restartButton;    
+    public TMP_Text scoreText;       
+    public TMP_Text lifeText;       
+    public TMP_Text lifeVillageText;       
 
-    private int score = 0;
-    private bool gameOver = false;   // Indica se o jogo acabou
+    public int score = 0;
+           
+    private bool gameOver = false;   
 
-    // Propriedade para acesso externo do estado de Game Over
     public bool IsGameOver
     {
         get { return gameOver; }
@@ -23,7 +25,6 @@ public class GameManager : MonoBehaviour
 
     void Awake()
     {
-        // Implementação do singleton
         if (Instance == null)
         {
             Instance = this;
@@ -36,15 +37,15 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        // Inicialmente, esconde os elementos de Game Over
         if (gameOverText != null)
             gameOverText.gameObject.SetActive(false);
         if (restartButton != null)
             restartButton.gameObject.SetActive(false);
         UpdateScoreText();
+        UpdateLife(3);
+        UpdateVillageLife(5);
     }
 
-    // Atualiza a pontuação e a exibição na tela
     public void AddScore(int amount)
     {
         score += amount;
@@ -57,17 +58,35 @@ public class GameManager : MonoBehaviour
             scoreText.text = "Score: " + score;
     }
 
-    // Chamada quando o ninja é atingido por uma shuriken
+    public void UpdateLife(int life)
+    {
+        lifeText.text = ""; 
+        for (int i = 0; i < life; i++)
+        {
+            if (lifeText != null)
+                lifeText.text += "â™¥";
+        }
+    }
+
+    public void UpdateVillageLife(int life)
+    {
+        lifeVillageText.text = ""; 
+        for (int i = 0; i < life; i++)
+        {
+            if (lifeVillageText != null)
+                lifeVillageText.text += "â™¥";
+        }
+    }
+
+    
     public void GameOver()
     {
-        // Remove todas as shurikens que ainda estão na cena
         GameObject[] shurikens = GameObject.FindGameObjectsWithTag("Shuriken");
         foreach (GameObject s in shurikens)
         {
             Destroy(s);
         }
 
-        // Exibe a UI de Game Over
         if (gameOverText != null)
             gameOverText.gameObject.SetActive(true);
         if (restartButton != null)
@@ -77,13 +96,10 @@ public class GameManager : MonoBehaviour
             restartButton.onClick.AddListener(RestartGame);
         }
 
-        // Sinaliza o Game Over para outros scripts
         gameOver = true;
-        // Pausa o jogo
         Time.timeScale = 0f;
     }
 
-    // Reinicia a cena atual e reseta o Time.timeScale
     public void RestartGame()
     {
         Time.timeScale = 1f;

@@ -2,17 +2,15 @@ using UnityEngine;
 
 public class Shuriken : MonoBehaviour
 {
-    [Header("Configurações de Movimento e Animação")]
+    [Header("Configuraï¿½ï¿½es de Movimento e Animaï¿½ï¿½o")]
     public float speed = 5f;
-    public float animInterval = 0.2f;  // Tempo entre a troca das sprites
-
+    public float animInterval = 0.2f;
     [Header("Sprites da Shuriken")]
-    public Sprite spriteZero;      // Sprite com rotação 0º
-    public Sprite spriteFortyFive; // Sprite com rotação 45º
-
+    public Sprite spriteZero;
+    public Sprite spriteFortyFive;
     private SpriteRenderer spriteRenderer;
     private float animTimer = 0f;
-    private bool toggleSprite = false; // false usa spriteZero, true usa spriteFortyFive
+    private bool toggleSprite = false;
 
     void Start()
     {
@@ -25,10 +23,8 @@ public class Shuriken : MonoBehaviour
 
     void Update()
     {
-        // Movimento para a esquerda
         transform.Translate(Vector3.left * speed * Time.deltaTime);
 
-        // Controle da animação: troca a sprite a cada animInterval segundos
         animTimer += Time.deltaTime;
         if (animTimer >= animInterval)
         {
@@ -38,41 +34,48 @@ public class Shuriken : MonoBehaviour
         }
     }
 
-    // Quando a shuriken sair da câmera, destrói o objeto para evitar acúmulo de objetos na cena
     void OnBecameInvisible()
     {
         Destroy(gameObject);
     }
 
-    // Detecta colisões via trigger com o objeto ninja
     void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("Ninja"))
         {
-            // Tenta obter o componente NinjaController do ninja
             NinjaController ninja = collision.GetComponent<NinjaController>();
             if (ninja != null)
             {
-                // Se o ninja estiver atacando, a shuriken é quebrada
                 if (ninja.IsAttacking)
                 {
-                    // Incrementa a pontuação e destrói a shuriken
                     GameManager.Instance.AddScore(1);
                     Destroy(gameObject);
                 }
                 else
                 {
-                    // Se o ninja não estiver atacando, ele é atingido e o jogo acaba
-                    GameManager.Instance.GameOver();
-                    // Aqui você pode optar por destruir o ninja ou desativar o seu controle
-                    Destroy(collision.gameObject);
+                    ninja.TakeDamage();
+                    Destroy(gameObject);
                 }
             }
             else
             {
-                // Caso não consiga encontrar o componente ninja, assume-se que é um acerto
                 GameManager.Instance.GameOver();
             }
         }
+        if (collision.CompareTag("Village"))
+        {
+            VillageController vila = collision.GetComponent<VillageController>();
+            if (vila != null)
+            {
+                vila.TakeDamage();
+                Destroy(gameObject);
+            }
+            else
+            {
+                GameManager.Instance.GameOver();
+            }
+        }
+
+
     }
 }
