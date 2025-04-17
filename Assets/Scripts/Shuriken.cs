@@ -2,12 +2,18 @@ using UnityEngine;
 
 public class Shuriken : MonoBehaviour
 {
-    [Header("Configura��es de Movimento e Anima��o")]
+    [Header("Configurações de Movimento e Animação")]
     public float speed = 5f;
     public float animInterval = 0.2f;
+
     [Header("Sprites da Shuriken")]
     public Sprite spriteZero;
     public Sprite spriteFortyFive;
+
+    [Header("Tutorial Mode")]
+    public bool tutorialMode = false;
+    public TutorialManager tutorialManager;
+
     private SpriteRenderer spriteRenderer;
     private float animTimer = 0f;
     private bool toggleSprite = false;
@@ -15,10 +21,7 @@ public class Shuriken : MonoBehaviour
     void Start()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
-        if (spriteRenderer != null && spriteZero != null)
-        {
-            spriteRenderer.sprite = spriteZero;
-        }
+        spriteRenderer.sprite = spriteZero;
     }
 
     void Update()
@@ -41,28 +44,9 @@ public class Shuriken : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.CompareTag("Ninja"))
-        {
-            NinjaController ninja = collision.GetComponent<NinjaController>();
-            if (ninja != null)
-            {
-                if (ninja.IsAttacking)
-                {
-                    GameManager.Instance.AddScore(1);
-                    Destroy(gameObject);
-                }
-                else
-                {
-                    ninja.TakeDamage();
-                    Destroy(gameObject);
-                }
-            }
-            else
-            {
-                GameManager.Instance.GameOver();
-            }
-        }
-        if (collision.CompareTag("Village"))
+        if (!collision.CompareTag("Ninja") && tutorialMode) return;
+
+        if (collision.CompareTag("Village") && !tutorialMode)
         {
             VillageController vila = collision.GetComponent<VillageController>();
             if (vila != null)
@@ -74,8 +58,25 @@ public class Shuriken : MonoBehaviour
             {
                 GameManager.Instance.GameOver();
             }
+        } else {
+            NinjaController ninja = collision.GetComponent<NinjaController>();
+            if (ninja != null && ninja.IsAttacking)
+            {
+                if (tutorialMode && tutorialManager != null)
+                {
+                    tutorialManager.OnTutorialShurikenHit();
+                }
+                else
+                {
+                    GameManager.Instance.AddScore(1);
+                }
+                Destroy(gameObject);
+            }
+            else if (ninja != null && !ninja.IsAttacking)
+            {
+                ninja.TakeDamage();
+                Destroy(gameObject);
+            }
         }
-
-
     }
 }

@@ -27,6 +27,9 @@ public class NinjaController : MonoBehaviour
     public float attackPrepareTime = 0.2f;
     public float attackDuration = 0.2f;
 
+    [Header("Tutorial Mode")]
+    public bool tutorialMode = false;
+
     private bool isGrounded = true;
     private bool isAttacking = false;
 
@@ -124,6 +127,8 @@ public class NinjaController : MonoBehaviour
     }
     public void TakeDamage()
     {
+        if (tutorialMode) return;
+
         if (isInvincible) return;
 
         GameManager.Instance.UpdateLife(--life);
