@@ -27,7 +27,6 @@ public class Shuriken : MonoBehaviour
     void Update()
     {
         transform.Translate(Vector3.left * speed * Time.deltaTime);
-
         animTimer += Time.deltaTime;
         if (animTimer >= animInterval)
         {
@@ -44,11 +43,13 @@ public class Shuriken : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D collision)
     {
+        // ignora colisões em tutorial com qualquer coisa que não seja Ninja
         if (!collision.CompareTag("Ninja") && tutorialMode) return;
 
+        // se acertar uma vila
         if (collision.CompareTag("Village") && !tutorialMode)
         {
-            VillageController vila = collision.GetComponent<VillageController>();
+            var vila = collision.GetComponent<VillageController>();
             if (vila != null)
             {
                 vila.TakeDamage();
@@ -56,26 +57,29 @@ public class Shuriken : MonoBehaviour
             }
             else
             {
+                // fallback: sem VillageController → encerra
                 GameManager.Instance.GameOver();
             }
-        } else {
-            NinjaController ninja = collision.GetComponent<NinjaController>();
-            if (ninja != null && ninja.IsAttacking)
+        }
+        else
+        {
+            // se acertar um ninja
+            var ninja = collision.GetComponent<NinjaController>();
+            if (ninja != null)
             {
-                if (tutorialMode && tutorialManager != null)
+                if (ninja.IsAttacking)
                 {
-                    tutorialManager.OnTutorialShurikenHit();
+                    if (tutorialMode && tutorialManager != null)
+                        tutorialManager.OnTutorialShurikenHit();
+                    else
+                        GameManager.Instance.AddScore(ninja.playerId, 1);
+                    Destroy(gameObject);
                 }
                 else
                 {
-                    GameManager.Instance.AddScore(1);
+                    ninja.TakeDamage();
+                    Destroy(gameObject);
                 }
-                Destroy(gameObject);
-            }
-            else if (ninja != null && !ninja.IsAttacking)
-            {
-                ninja.TakeDamage();
-                Destroy(gameObject);
             }
         }
     }

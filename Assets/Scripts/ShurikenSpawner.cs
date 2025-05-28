@@ -3,33 +3,36 @@ using UnityEngine;
 public class ShurikenSpawner : MonoBehaviour
 {
     public GameObject shurikenPrefab;
-    private float spawnRate = 1.5f;
+    public float spawnRate = 1.5f;
     public float spawnYMin = -2.5f;
     public float spawnYMax = 0f;
 
     private bool spawnCondition = false;
 
-
     void Start()
     {
-        InvokeRepeating("SpawnShuriken", 0f, spawnRate);
-
+        InvokeRepeating(nameof(SpawnShuriken), 0f, spawnRate);
     }
 
     void Update()
     {
-        if (GameManager.Instance != null && GameManager.Instance.IsGameOver)
+        if (GameManager.Instance.IsGameOver)
         {
-            CancelInvoke("SpawnShuriken");
+            CancelInvoke(nameof(SpawnShuriken));
+            return;
         }
-        int score = GameManager.Instance.score;
-        if (score > 0 && score % 5 == 0 && score < 50 && !spawnCondition){
+
+        // agora usa o score combinado de todos os players
+        int totalScore = GameManager.Instance.GetCombinedScore();
+        if (totalScore > 0 && totalScore % 5 == 0 && totalScore < 50 && !spawnCondition)
+        {
             spawnCondition = true;
-            spawnRate = spawnRate -0.07f;
-            CancelInvoke("SpawnShuriken");
-            InvokeRepeating("SpawnShuriken", 0f, spawnRate);
+            spawnRate -= 0.07f;
+            CancelInvoke(nameof(SpawnShuriken));
+            InvokeRepeating(nameof(SpawnShuriken), 0f, spawnRate);
         }
-        if (score % 5 != 0 && spawnCondition){
+        else if (totalScore % 5 != 0 && spawnCondition)
+        {
             spawnCondition = false;
         }
     }
@@ -38,11 +41,15 @@ public class ShurikenSpawner : MonoBehaviour
     {
         if (shurikenPrefab == null)
         {
-            Debug.LogWarning("shurikenPrefab � nulo. Verifique a refer�ncia no Inspector.");
+            Debug.LogWarning("shurikenPrefab é nulo. Verifique a referência no Inspector.");
             return;
         }
 
-        Vector3 spawnPosition = new Vector3(transform.position.x, Random.Range(spawnYMin, spawnYMax), 0);
+        Vector3 spawnPosition = new Vector3(
+            transform.position.x,
+            Random.Range(spawnYMin, spawnYMax),
+            0f
+        );
         Instantiate(shurikenPrefab, spawnPosition, Quaternion.identity);
     }
 }

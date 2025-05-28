@@ -35,7 +35,7 @@ public class TutorialManager : MonoBehaviour
         switch (currentStep)
         {
             case Step.Move:
-                if (Mathf.Abs(Input.GetAxisRaw("Horizontal")) > 0.1f)
+                if (Mathf.Abs(Input.GetAxisRaw("Horizontal2")) > 0.1f)
                     NextStep();
                 break;
             case Step.Attack:
@@ -43,7 +43,7 @@ public class TutorialManager : MonoBehaviour
                     NextStep();
                 break;
             case Step.Jump:
-                if (Input.GetButtonDown("Jump"))
+                if (Input.GetButtonDown("Jump2"))
                     NextStep();
                 break;
         }
@@ -63,13 +63,13 @@ public class TutorialManager : MonoBehaviour
         switch (currentStep)
         {
             case Step.Move:
-                instructionText.text = "Use ← e → para SE MOVER";
+                instructionText.text = "Use A e D para SE MOVER";
                 break;
             case Step.Attack:
                 instructionText.text = "Pressione Z para ATACAR";
                 break;
             case Step.Jump:
-                instructionText.text = "Pressione Espaço para PULAR";
+                instructionText.text = "Pressione W para PULAR";
                 break;
             case Step.Combat:
                 instructionText.text = "Defenda‑se! Marque 5 pontos";

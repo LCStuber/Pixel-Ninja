@@ -1454,6 +1454,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64d00127356e5514c98a0f64f4211874, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerId: 0
+  horizontalAxis: Horizontal2
+  jumpButton: Jump2
+  attackKey: 122
   life: 3
   idleSprite: {fileID: 9095853184155359625, guid: dd242987843bd9a49b9d132b4060c354, type: 3}
   moveSprite: {fileID: 3505777073923609268, guid: cd2ba71fbe4f5a64186ad90904a55822, type: 3}
@@ -1461,6 +1465,7 @@ MonoBehaviour:
   attackPrepareSprite: {fileID: 1486436317612099355, guid: a645b735533bbdd41a210b5e2ec6703d, type: 3}
   attackSprite: {fileID: -7522667592720106071, guid: 89da9696bc1016a42a0d496fe8a95e5d, type: 3}
   moveSpeed: 5
+  jumpForce: 7
   attackPrepareTime: 0.2
   attackDuration: 0.2
   tutorialMode: 1

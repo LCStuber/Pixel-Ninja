@@ -1,13 +1,17 @@
+// NinjaController.cs
 using UnityEngine;
 using System.Collections;
 
 public class NinjaController : MonoBehaviour
 {
-    public int life = 3;
+    [Header("Identificação do Jogador")]
+    public int playerId = 0;                          // 0 = P1, 1 = P2
+    public string horizontalAxis = "Horizontal";      // ex.: "Horizontal1", "Horizontal2"
+    public string jumpButton = "Jump";           // ex.: "Jump1", "Jump2"
+    public KeyCode attackKey = KeyCode.Z;        // ex.: KeyCode.Z, KeyCode.X
 
-    private bool isInvincible = false;
-    private float invincibilityDuration = 0.25f; 
-    private float invincibilityTimer = 0f;
+    [Header("Vidas iniciais")]
+    public int life = 3;
 
     [Header("Sprites de Animação")]
     public Sprite idleSprite;
@@ -16,20 +20,20 @@ public class NinjaController : MonoBehaviour
     public Sprite attackPrepareSprite;
     public Sprite attackSprite;
 
-    private SpriteRenderer spriteRenderer;
-    private Rigidbody2D rb;
-
-    [Header("Configurações de Movimento")]
+    [Header("Movimento e Ataque")]
     public float moveSpeed = 5f;
-    float jumpForce = 7f;
-
-    [Header("Configurações de Ataque")]
+    public float jumpForce = 7f;
     public float attackPrepareTime = 0.2f;
     public float attackDuration = 0.2f;
 
     [Header("Tutorial Mode")]
     public bool tutorialMode = false;
 
+    private SpriteRenderer spriteRenderer;
+    private Rigidbody2D rb;
+    private bool isInvincible = false;
+    private float invincibilityDuration = 0.25f;
+    private float invincibilityTimer = 0f;
     private bool isGrounded = true;
     private bool isAttacking = false;
 
@@ -38,110 +42,98 @@ public class NinjaController : MonoBehaviour
         get { return isAttacking; }
     }
 
-    void Awake()
-    {
-        spriteRenderer = GetComponent<SpriteRenderer>();
-        rb = GetComponent<Rigidbody2D>();
+   void Awake()
+   {
+       spriteRenderer = GetComponent<SpriteRenderer>();
+       rb = GetComponent<Rigidbody2D>();
+       rb.freezeRotation = true;
+   }
 
-        rb.freezeRotation = true;
-    }
+void Start()
+   {
+           // agora sim temos certeza que GameManager.Instance já existe
+    GameManager.Instance.UpdateLife(playerId, life);
+       }
 
-    void Update()
+void Update()
     {
+        // invencibilidade
         if (isInvincible)
         {
             invincibilityTimer -= Time.deltaTime;
-            if (invincibilityTimer <= 0f)
-            {
-                isInvincible = false;
-            }
+            if (invincibilityTimer <= 0f) isInvincible = false;
         }
 
-        float horizontal = Input.GetAxisRaw("Horizontal");
-
+        // input
+        float horizontal = Input.GetAxisRaw(horizontalAxis);
         if (!isAttacking)
-        {
             rb.linearVelocity = new Vector2(horizontal * moveSpeed, rb.linearVelocity.y);
-        }
 
-        if (Input.GetButtonDown("Jump") && isGrounded && !isAttacking)
+        if (Input.GetButtonDown(jumpButton) && isGrounded && !isAttacking)
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
             isGrounded = false;
         }
 
-        if (Input.GetKeyDown(KeyCode.Z) && !isAttacking)
-        {
+        if (Input.GetKeyDown(attackKey) && !isAttacking)
             StartCoroutine(Attack());
-        }
 
-        if (isAttacking)
-        {
-            // Durante o ataque, a sprite é controlada pela coroutine Attack()
-        }
-        else if (!isGrounded)
-        {
-            spriteRenderer.sprite = jumpSprite;
-        }
-        else if (Mathf.Abs(horizontal) > 0.1f)
-        {
-            spriteRenderer.sprite = moveSprite;
-        }
-        else
-        {
-            spriteRenderer.sprite = idleSprite;
-        }
+        // animações
+        if (isAttacking) { /* coroutine já cuida das sprites */ }
+        else if (!isGrounded) spriteRenderer.sprite = jumpSprite;
+        else if (Mathf.Abs(horizontal) > 0.1f) spriteRenderer.sprite = moveSprite;
+        else spriteRenderer.sprite = idleSprite;
 
-        if (horizontal < 0)
-            spriteRenderer.flipX = true;
-        else if (horizontal > 0)
-            spriteRenderer.flipX = false;
+        // flip
+        if (horizontal < 0) spriteRenderer.flipX = true;
+        else if (horizontal > 0) spriteRenderer.flipX = false;
     }
 
     IEnumerator Attack()
     {
         isAttacking = true;
-
         spriteRenderer.sprite = attackPrepareSprite;
         yield return new WaitForSeconds(attackPrepareTime);
-
         spriteRenderer.sprite = attackSprite;
         yield return new WaitForSeconds(attackDuration);
-
         isAttacking = false;
     }
+
     void LateUpdate()
     {
-        Vector3 position = transform.position;
-        float screenHalfWidth = Camera.main.orthographicSize * Camera.main.aspect;
+        // limita dentro da câmera
+        Vector3 pos = transform.position;
+        float halfW = Camera.main.orthographicSize * Camera.main.aspect;
+        pos.x = Mathf.Clamp(pos.x, -halfW, halfW);
+        transform.position = pos;
+    }
 
-        position.x = Mathf.Clamp(position.x, -screenHalfWidth, screenHalfWidth);
-        transform.position = position;
-    }
-    void OnCollisionEnter2D(Collision2D collision)
+    void OnCollisionEnter2D(Collision2D col)
     {
-        if (collision.collider.CompareTag("Ground"))
-        {
-            isGrounded = true;
-        }
+        if (col.collider.CompareTag("Ground")) isGrounded = true;
     }
+
     public void TakeDamage()
     {
-        if (tutorialMode) return;
+        if (tutorialMode || isInvincible) return;
 
-        if (isInvincible) return;
-
-        GameManager.Instance.UpdateLife(--life);
+        life--;
+        GameManager.Instance.UpdateLife(playerId, life);
 
         if (life <= 0)
         {
-            GameManager.Instance.GameOver();
-            Destroy(gameObject);
+            GameManager.Instance.PlayerDied(playerId);
         }
         else
         {
             isInvincible = true;
             invincibilityTimer = invincibilityDuration;
         }
+    }
+
+    // Exemplo de chamada de pontuação (invocado quando acerta um inimigo, por exemplo)
+    public void OnEnemyDefeated(int points)
+    {
+        GameManager.Instance.AddScore(playerId, points);
     }
 }
