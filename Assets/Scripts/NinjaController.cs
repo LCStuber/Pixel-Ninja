@@ -115,6 +115,14 @@ void Update()
 
     public void TakeDamage()
     {
+        if (GameManager.Instance.currentMode == GameManager.Mode.Bonanza)
+        {
+            // só perde 1 ponto em vez de vida
+            GameManager.Instance.AddScore(playerId, -1);
+            return;
+        }
+        if (GameManager.Instance.currentMode == GameManager.Mode.Bonanza)
+            return;
         if (tutorialMode || isInvincible) return;
 
         life--;

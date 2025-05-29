@@ -8,6 +8,16 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
 
+    public enum Mode { Classic, Tutorial, Multiplayer, Bonanza }
+
+    [Header("Modo de Jogo")]
+    public Mode currentMode = Mode.Classic;
+
+    [Header("Bonanza")]
+    public float bonanzaDuration = 60f;
+    public TMP_Text bonanzaTimerText;
+    private float bonanzaTimer;
+
     [Header("UI dos Jogadores (arrays, tamanho = número de ninjas)")]
     public TMP_Text[] scoreTexts;
     public TMP_Text[] lifeTexts;
@@ -43,7 +53,7 @@ public class GameManager : MonoBehaviour
         else { Destroy(gameObject); return; }
 
         // só inicializamos arrays de jogadores (score/life)
-        int playerCount = Mathf.Min(scoreTexts.Length, lifeTexts.Length);
+        int playerCount = scoreTexts.Length;
         scores = new int[playerCount];
         lives = Enumerable.Repeat(initialLife, playerCount).ToArray();
 
@@ -53,6 +63,19 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        if (currentMode == Mode.Bonanza)
+        {
+            // sem vila e sem corações de vida
+            if (villageLifeText) villageLifeText.gameObject.SetActive(false);
+            foreach (var lt in lifeTexts) lt.gameObject.SetActive(false);
+
+            bonanzaTimer = bonanzaDuration;
+            bonanzaTimerText.gameObject.SetActive(true);
+        }
+        else
+        {
+            if (bonanzaTimerText) bonanzaTimerText.gameObject.SetActive(false);
+        }
         // esconde UI de Game Over
         if (gameOverText) gameOverText.gameObject.SetActive(false);
         if (restartButton) restartButton.gameObject.SetActive(false);
@@ -67,6 +90,25 @@ public class GameManager : MonoBehaviour
         // inicializa vida da vila
         UpdateVillageLife(villageLife);
     }
+
+    void Update()
+    {
+        if (currentMode == Mode.Bonanza && !gameOver)
+        {
+            bonanzaTimer -= Time.deltaTime;
+            bonanzaTimerText.text = $"Tempo: {bonanzaTimer:0}s";
+
+            if (bonanzaTimer <= 0f)
+                FinishBonanza();
+        }
+    }
+
+    void FinishBonanza()
+    {
+        gameOverText.text = $"FIM DO BONANZA!\nPontuação total: {GetCombinedScore()}";
+        GameOver();
+    }
+
 
     // → Chamado pelo NinjaController quando vence um inimigo
     public void AddScore(int playerId, int amount)
@@ -84,6 +126,8 @@ public class GameManager : MonoBehaviour
     // → Chamado pelo NinjaController quando toma dano
     public void UpdateLife(int playerId, int newLife)
     {
+        if (currentMode != Mode.Bonanza && newLife <= 0) PlayerDied(playerId);
+
         if (playerId < 0 || playerId >= lives.Length) return;
         lives[playerId] = newLife;
         UpdateLifeText(playerId);
@@ -94,6 +138,7 @@ public class GameManager : MonoBehaviour
 
     void UpdateLifeText(int playerId)
     {
+        if (currentMode != Mode.Bonanza)
         lifeTexts[playerId].text = string.Concat(Enumerable.Repeat("♥", lives[playerId]));
     }
 
@@ -101,6 +146,7 @@ public class GameManager : MonoBehaviour
     public void UpdateVillageLife(int newLife)
     {
         villageLife = newLife;
+        if (currentMode != Mode.Bonanza && villageLife <= 0) GameOver();
         if (villageLifeText)
             villageLifeText.text = string.Concat(Enumerable.Repeat("♥", villageLife));
 
@@ -125,6 +171,9 @@ public class GameManager : MonoBehaviour
         // se não sobrar nenhum vivo → game over
         bool anyAlive = FindObjectsOfType<NinjaController>()
                            .Any(n => n.life > 0);
+
+        if (currentMode != Mode.Bonanza && !anyAlive) GameOver();
+
         if (!anyAlive)
             GameOver();
     }

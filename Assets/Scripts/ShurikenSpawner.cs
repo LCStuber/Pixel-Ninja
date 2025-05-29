@@ -9,8 +9,12 @@ public class ShurikenSpawner : MonoBehaviour
 
     private bool spawnCondition = false;
 
+    private bool bonanzaMode;
+
     void Start()
     {
+        bonanzaMode = GameManager.Instance.currentMode == GameManager.Mode.Bonanza;
+        if (bonanzaMode) spawnRate = 0.5f;         // chuva rápida
         InvokeRepeating(nameof(SpawnShuriken), 0f, spawnRate);
     }
 
@@ -22,12 +26,24 @@ public class ShurikenSpawner : MonoBehaviour
             return;
         }
 
-        // agora usa o score combinado de todos os players
+        if (bonanzaMode)
+        {
+            float target = Mathf.Max(0.1f, 0.5f - GameManager.Instance.GetCombinedScore() * 0.02f);
+
+            if (target < spawnRate - 0.05f)
+            {
+                spawnRate = target;
+                CancelInvoke(nameof(SpawnShuriken));
+                InvokeRepeating(nameof(SpawnShuriken), 0f, spawnRate);
+            }
+            return;
+        }
+
         int totalScore = GameManager.Instance.GetCombinedScore();
         if (totalScore > 0 && totalScore % 5 == 0 && totalScore < 50 && !spawnCondition)
         {
             spawnCondition = true;
-            spawnRate -= 0.07f;
+            spawnRate = Mathf.Max(0.1f, spawnRate - 0.07f);
             CancelInvoke(nameof(SpawnShuriken));
             InvokeRepeating(nameof(SpawnShuriken), 0f, spawnRate);
         }
@@ -43,6 +59,11 @@ public class ShurikenSpawner : MonoBehaviour
         {
             Debug.LogWarning("shurikenPrefab é nulo. Verifique a referência no Inspector.");
             return;
+        }
+
+        if (bonanzaMode)
+        {
+            float side = Random.value < 0.5f ? -0.5f : 0.5f;
         }
 
         Vector3 spawnPosition = new Vector3(
