@@ -251,7 +251,7 @@ MonoBehaviour:
   playerId: 0
   horizontalAxis: Horizontal1
   jumpButton: Jump1
-  attackKey: 305
+  attackKey: 46
   life: 3
   idleSprite: {fileID: 9095853184155359625, guid: dd242987843bd9a49b9d132b4060c354, type: 3}
   moveSprite: {fileID: 3505777073923609268, guid: cd2ba71fbe4f5a64186ad90904a55822, type: 3}
@@ -338,6 +338,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6fdb56fd6b3323c428b8ef5d08405c8e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  currentMode: 2
+  bonanzaDuration: 60
+  bonanzaTimerText: {fileID: 0}
   scoreTexts:
   - {fileID: 1922781511}
   - {fileID: 1410190445}

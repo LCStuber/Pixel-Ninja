@@ -147,7 +147,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Movimentando_RED_0: -267853146185049713
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
